@@ -7,7 +7,16 @@
 
 """invenio-edugain views."""
 
-from flask import Blueprint, render_template
+import traceback
+from xml.etree import ElementTree as ET
+
+from flask import Blueprint, Response, render_template, request
+from saml2 import BINDING_HTTP_POST
+from saml2.client import Saml2Client
+from saml2.config import Config, SPConfig
+from saml2.metadata import entity_descriptor
+
+from .saml_config import NS_PREFIX, config_dict, get_idp_data_dict
 
 # TODO: consider def create_blueprint(url_prefix='')
 blueprint = Blueprint(
@@ -19,128 +28,25 @@ blueprint = Blueprint(
 
 
 # TODO: make routes configurable
+# TODO: consider /login/edugain instead, which is the pattern invenio provides logins under...
 @blueprint.route("/edugain/login")
 def login() -> str:
+    """Discovery page for chosing an IdP."""
     return render_template(
         "invenio_edugain/login_discovery.html",
         idp_data_dict=get_idp_data_dict(),
     )
 
 
-from invenio_db import db
-
-from .models import IdPData
-
-
-# TODO: cache
-def get_idp_data_dict() -> dict:
-    query = db.select(IdPData)
-    idps_data: list[IdPData] = db.session.execute(query).scalars()
-    return {
-        idp_data.id: {
-            "displayname": idp_data.displayname,
-            "logo_url": idp_data.logo_url,
-        }
-        for idp_data in idps_data
-        if idp_data.enabled
-    }
-
-
-# TODO: consider using a FlaskResource for the following API
-# TODO: move these to other file(s)
-import logging
-import sys
-import traceback
-from typing import Any
-
-from flask import request
-from lxml import etree
-from saml2 import BINDING_HTTP_POST
-from saml2.client import Saml2Client, logger
-from saml2.config import SPConfig
-from saml2.mdstore import InMemoryMetaData
-from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
-
-
-class AuthnHandler(logging.StreamHandler):
-    def handle(self, record):
-        if record.msg.startswith("AuthNReq: "):
-            xml = record.args[0]
-
-            root = etree.fromstring(xml)
-            pretty_xml = etree.tostring(root, pretty_print=True).decode("utf-8")
-
-            record.args = (pretty_xml,)
-
-        return super().handle(record)
-
-
-logger.setLevel(logging.DEBUG)
-logger.addHandler(AuthnHandler(sys.stderr))
-
-
-class MetaDataFlaskSQL(InMemoryMetaData):
-    """Loads single entity from SQL-db.
-
-    This is akin to saml2.mdstore.MetaDataMD, which loads from file rather than from db.
-    """
-
-    def __init__(
-        self,
-        attrc: tuple | None,
-        __: str,  # metadata loaders must always take a second positional arg, which doubles as id in MDStore
-        **kwargs: Any,  # noqa: ANN401
-    ) -> None:
-        """Init."""
-        super().__init__(attrc, **kwargs)
-
-    # TODO: load only passed idp-id?
-    # TODO: cache idp_settings somewhere?
-    # TODO: pass some positional arg that actually does something? e.g. `db`
-    def load(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401, ARG002
-        """Load."""
-        for idp in db.session.scalars(db.select(IdPData)):
-            self.entity[idp.id] = idp.settings
-
-
+# TODO: consider using a FlaskResource for the following two functions
 @blueprint.route("/edugain/authn-request")
 def authn_request():
+    """Send an authorization-request to IdP depending on `request.args`.
+
+    request.args["id"] identifies the IdP to send the request to
+    request.args["next"] determines which to redirect to after response
+    """
     try:
-        config_dict = {
-            "service": {
-                "sp": {
-                    # others from SPEC['sp']
-                    "authn_requests_signed": True,
-                    "digest_algorithm": DIGEST_SHA256,
-                    "endpoints": {
-                        "assertion_consumer_service": [
-                            ("https://localhost:5000/edugain/acs", BINDING_HTTP_POST),
-                        ],
-                    },
-                    # the following should cause a different SP-xml to be generated I think?
-                    "entity_attributes": [
-                        {
-                            # "friendly_name": ?  # TODO: this needed?
-                            "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-                            "name": "urn:oasis:names:tc:SAML:profiles:subject-id:req",
-                            "values": ["any"],
-                        },
-                    ],
-                    "force_authn": False,  # doesn't show yet...  # tugraz-mail SSO uses this, should it though?
-                    "signing_algorithm": SIG_RSA_SHA256,
-                },
-            },
-            "metadata": [
-                {
-                    "class": "invenio_edugain.views.MetaDataFlaskSQL",
-                    "metadata": [(None,)],
-                },
-                # TODO: load SP-config here, <Issuer> will be populated from this
-            ],
-            "key_file": "pki/mykey.pem",
-            "cert_file": "pki/mycert.pem",
-            # TODO: "xmlsec_binary"
-        }
         config = SPConfig()
         config.load(config_dict)
         client = Saml2Client(config)
@@ -151,21 +57,49 @@ def authn_request():
             ],  # TODO: better error-message if doesn't exist...
             relay_state=request.args[
                 "next"
-            ],  # TODO: consider translating relative to absolute url, default if not given
-            nsprefix={  # namespaces for the created <AuthnRequest>
-                "ds": "http://www.w3.org/2000/09/xmldsig#",
-                "saml2": "urn:oasis:names:tc:SAML:2.0:assertion",
-                "saml2p": "urn:oasis:names:tc:SAML:2.0:protocol",
-            },
+            ],  # TODO: consider translating relative to absolute url, default if not given  # TODO: use .get instead of [...]
+            nsprefix=NS_PREFIX,
         )
         return {"request_id": request_id, "info": info}
     except Exception as e:
         return traceback.format_exception(e)
 
 
-# next:
-#   key_file, cert_file
-#   get AuthnRequest XML right before it's b64-encoded
-#   endpoint for acs
+# TODO: the route /edugain/sp is duplicated from sp_config_dict (entitiy-id should show sp-metadata), dedup this
+@blueprint.route("/edugain/sp")
+def sp_xml() -> Response:
+    """Show SAML xml-metadata of this service provider."""
+    config = Config()
+    config.load(config_dict)
+    ed = entity_descriptor(config)
+
+    # TODO: consider removing this, as it's just an string-representation cleanup
+    et = ET.XML(ed.to_string(NS_PREFIX))
+    ET.indent(et)
+    xml_bytes = ET.tostring(et, xml_declaration=True)
+
+    return Response(xml_bytes, mimetype="application/xml")
+
+
+# TODO: the route /edugain/acs is duplicated here from sp_config_dict, dedup this
+@blueprint.route("/edugain/acs", methods=["POST"])
+def acs():
+    """Assertion consumer service."""
+    config = SPConfig()
+    config.load(config_dict)
+    client = Saml2Client(config)
+
+    # TODO: try-except for better error?
+    authn_response = client.parse_authn_request_response(
+        request.form["SAMLResponse"],
+        BINDING_HTTP_POST,
+    )
+    return authn_response.get_identity()
+
 
 # TODO: collect all over the place TODOs in one place
+
+# pysaml2: `it is recommended that the entityid should point to a real webpage where the metadata for the entity can be found`
+# TODO: required_attributes should only be part of configuration when building <EntityDescriptor>, but not when building <AuthnRequest>
+# TODO: clicking back-and-forth between /login and /edugain/login messes up ?next=...
+# TODO: don't load metadata from db on /edugain/sp

@@ -5,7 +5,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
-import { Container, Form } from "semantic-ui-react";
+import { Form } from "semantic-ui-react";
 
 // TODO: sort entries somehow
 // TODO: consider computing options in backend already
@@ -20,34 +20,34 @@ function IdpDiscovery({ idpData }) {
     }),
   );
   return (
-    <Container>
-      <Form.Dropdown // consider Dropdown over Form.Dropdown...
-        clearable // TODO: remove as it is non-sensical
-        fluid
-        noResultsMessage="No results found." // TODO: translate
-        onChange={(_event, { value }) => {
-          if (value) {
-            let url = new URL(
-              "/edugain/authn-request", // TODO: prefix with /api ?, TODO: make configurable
-              document.location.origin,
-            );
-            const currentSearchParams = new URLSearchParams(
-              document.location.search,
-            );
-            const next = currentSearchParams.get("next", "/");
-            url.searchParams.set("id", value);
-            if (next) {
-              url.searchParams.set("next", next);
-            }
-            window.location.href = url.toString();
+    <Form.Dropdown // consider Dropdown over Form.Dropdown...
+      clearable // TODO: remove as it is non-sensical
+      fluid
+      noResultsMessage="No results found." // TODO: translate
+      onChange={(_event, { value }) => {
+        // TODO: this automatically selects first item when clicking out of the dropdown
+        if (value) {
+          let url = new URL(
+            "/edugain/authn-request", // TODO: prefix with /api ?, TODO: make configurable
+            document.location.origin,
+          );
+          const currentSearchParams = new URLSearchParams(
+            document.location.search,
+          );
+          const next = currentSearchParams.get("next", "/");
+          url.searchParams.set("id", value);
+          if (next) {
+            url.searchParams.set("next", next);
           }
-        }}
-        options={options}
-        placeholder="Select your IdP." // TODO: translate
-        search
-        selection
-      ></Form.Dropdown>
-    </Container>
+          window.location.href = url.toString();
+        }
+      }}
+      options={options}
+      placeholder="Select your IdP." // TODO: translate  // TODO: users wouldn't have a clue what IdP is
+      search
+      selection
+      style={{ width: 600 }}
+    ></Form.Dropdown>
   );
 }
 

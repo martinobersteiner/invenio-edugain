@@ -6,7 +6,7 @@
   under the terms of the MIT License; see LICENSE file for more details.
 #}
 
-{% extends config.BASE_TEMPLATE %}
+{% extends config.INVENIO_THEME_TUGRAZ_ACCOUNT_BASE %}
 
 
 {% block javascript %}
@@ -18,8 +18,39 @@
   {{ super() }}
 {% endblock css %}
 
+{% block page_header %}
+  {% if not config.THEME_TUGRAZ_PRODUCTION %}
+    <div class="ui sticky test-instance">
+      <h4>{{ _("Test Instance") }}</h4>
+      <p>{{ _("This is the test instance of the TU Graz Repository.") }}</p>
+    </div>
+  {% endif %}
+
+  {% from 'invenio_banners/banner.html' import banner %}
+  {{ banner() }}
+
+  {% include "invenio_theme_tugraz/navbar.html" %}
+{% endblock page_header %}
+
 {% block page_body %}
-  <div id="edugain-discovery" data-idp-data-json='{{ idp_data_dict | tojson }}'>
-    <!-- content is react-controlled -->
+  {# this is made to look like TU Graz's login page #}
+  <div class="spacer-long"></div>
+  <div class="spacer-long"></div>
+  <div class="ui container">
+    <div class="ui centered grid padded">
+      <div class="ui padded segments large form">
+        <div class="ui segment padded">
+          <div class="divider hidden"></div>
+          <h3 class="ui login header">Find your institution</h3>{# TODO: translate #}
+          <div class="ui divider"></div>
+          <div id="edugain-discovery" class="field" data-idp-data-json='{{ idp_data_dict | tojson }}'>
+            <!-- content is react-controlled -->
+          </div>
+          <div style="text-align: left;">
+            <a href="/">Why isn't my institution showing?</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock page_body %}
