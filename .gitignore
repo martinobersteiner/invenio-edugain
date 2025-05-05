@@ -78,3 +78,9 @@ nosetests.xml
 
 # VSCode: repository-local configuration
 .vscode/
+
+# local stuff
+# invenio_edugain/saml-test.py
+# invenio_edugain/log
+# invenio_edugain/debug.py
+# invenio_edugain/templates/semantic-ui/invenio_edugain/login_user.html

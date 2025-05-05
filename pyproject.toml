@@ -10,7 +10,7 @@ authors = [
   {name = "Graz University of Technology", email = "info@tugraz.at"},
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
@@ -43,11 +43,23 @@ opensearch2 = [
   "invenio-search[opensearch2]>=3.0.0,<4.0.0",
 ]
 
+[project.entry-points."flask.commands"]
+edugain = "invenio_edugain.cli:edugain"
+
+[project.entry_points.invenio_assets.webpack]
+invenio_edugain = "invenio_edugain.webpack:edugain"
+
 [project.entry-points."invenio_base.api_apps"]
 invenio_edugain = "invenio_edugain:InvenioEdugain"
 
 [project.entry-points."invenio_base.apps"]
 invenio_edugain = "invenio_edugain:InvenioEdugain"
+
+[project.entry-points."invenio_assets.webpack"]
+invenio_edugain = "invenio_edugain.webpack:edugain"
+
+[project.entry-points."invenio_base.blueprints"]
+invenio_edugain = "invenio_edugain.views:blueprint"  # TODO: or create_edugain_blueprint, consider api-blueprint
 
 [project.entry-points."invenio_celery.tasks"]
 invenio_edugain = "invenio_edugain.tasks"
@@ -79,11 +91,18 @@ path = "invenio_edugain/__init__.py"
 profile = "black"
 
 
+[tool.mypy]
+exclude = ["docs"]
+ignore_missing_imports = true
+
+
 [tool.pytest.ini_options]
 addopts = "--black --cov=invenio_edugain --cov-report=term-missing"
 testpaths = "tests invenio_edugain"
 
 
+# [tool.ruff]
+# exclude = ["docs"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
@@ -100,6 +119,7 @@ ignore = [
   "TID252",
   "UP009",
 ]
+fixable = ["RUF022"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [
