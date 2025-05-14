@@ -30,6 +30,13 @@ indent_size = 2
 [*.py]
 indent_size = 4
 
+# CSS, JSON
+[*.{css,json}]
+indent_size = 2
+
+[*.rst]
+indent_size = 4
+
 # YAML
 [*.{yaml,yml}]
 indent_size = 2

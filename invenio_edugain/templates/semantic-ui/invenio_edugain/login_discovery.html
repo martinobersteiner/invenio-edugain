@@ -19,6 +19,7 @@
 {% endblock css %}
 
 {% block page_body %}
+  {# TODO: this is made to look like TU Graz's login page; change this #}
   <div class="spacer-long"></div>
   <div class="spacer-long"></div>
   <div class="ui container">
@@ -30,6 +31,10 @@
           <div class="ui divider"></div>
           <div id="edugain-discovery" class="field" data-idp-data-json='{{ idp_data_dict | tojson }}'>
             <!-- content is react-controlled -->
+          </div>
+          <div style="text-align: left;">
+            {# TODO: probably open an accordion on clicking; make part of react-app? #}
+            <a href="/">Why isn't my institution showing?</a>
           </div>
         </div>
       </div>

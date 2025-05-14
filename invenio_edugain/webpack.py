@@ -17,9 +17,16 @@ edugain = WebpackThemeBundle(
         "semantic-ui": {
             "aliases": {
                 "@js/invenio_edugain": "js/invenio_edugain",
+                "@translations/invenio_edugain": "translations/invenio_edugain",
             },
             "copy": {},
             "dependencies": {
+                # axios
+                # i18next | babel | react-i18next
+                # lodash
+                # react-invenio-forms
+                # react-overridable
+                # semantic-ui-react
                 "jquery": "^3.2.1",
                 "prop-types": "^15.7.2",
                 "react": "^16.13.0",
