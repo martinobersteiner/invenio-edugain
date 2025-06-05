@@ -14,6 +14,7 @@
 #
 # Note: you can chose which db-service to run tests with via environment-variable `DB`
 #       if not set, DB=postgresql is used as default
+#       SEARCH=opensearch, and CACHE=redis
 #
 # Example for testing with mysql instead of postgresql:
 #    DB=mysql ./run-tests.sh
@@ -53,4 +54,5 @@ fi
 
 ruff check .
 eval "$(docker-services-cli up --db ${DB:-postgresql} --env)"
+# eval "$(docker-services-cli up --db ${DB:-postgresql} --search ${SEARCH:-opensearch} --cache ${CACHE:-redis} --env)"
 python -m pytest ${pytest_args[@]+"${pytest_args[@]}"}

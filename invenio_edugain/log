@@ -1,0 +1,14 @@
+2025-03-31T14:22:52.351985 build-args: <class 'invenio_jobs.models.Job'> <class 'datetime.datetime'> <class 'NoneType'> <class 'NoneType'>
+2025-03-31T14:22:52.352275 build-args: <class 'invenio_jobs.models.Job'> <class 'datetime.datetime'> <class 'NoneType'> <class 'NoneType'>
+2025-03-31T14:23:06.228010 build-args: <class 'invenio_jobs.models.Job'> <class 'datetime.datetime'> <class 'str'> <class 'str'>
+2025-03-31T14:23:08.309190 build-args: <class 'invenio_jobs.models.Job'> <class 'datetime.datetime'> <class 'NoneType'> <class 'NoneType'>
+2025-03-31T14:26:09.435926 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> None: <class 'NoneType'> None: <class 'NoneType'>
+2025-03-31T14:26:09.438163 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> None: <class 'NoneType'> None: <class 'NoneType'>
+2025-03-31T14:26:15.645208 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> 'asdf': <class 'str'> 'ArgsSchema': <class 'str'>
+2025-03-31T14:26:17.725405 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> None: <class 'NoneType'> None: <class 'NoneType'>
+2025-04-01T08:17:00.837575+00:00 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> None: <class 'NoneType'> None: <class 'NoneType'>
+2025-04-01T08:17:00.839823+00:00 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> None: <class 'NoneType'> None: <class 'NoneType'>
+2025-04-01T08:17:18.248493+00:00 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 3, 31, 12, 11, 54, 313771): <class 'datetime.datetime'> 'https://eduid.at/md/aconet-registered.xml': <class 'str'> 'ArgsSchema': <class 'str'>
+2025-04-01T08:17:18.293057+00:00 ingest_idp_data: https://eduid.at/md/aconet-registered.xml
+2025-04-01T08:17:20.279938+00:00 build-args: <Job 4a4b9ff9-349c-4cd9-bf04-10e21ff317ad>: <class 'invenio_jobs.models.Job'> datetime.datetime(2025, 4, 1, 8, 17, 18, 286502): <class 'datetime.datetime'> None: <class 'NoneType'> None: <class 'NoneType'>
+2025-04-02T09:21:05.806803+00:00 ingest_idp_data: https://mds.edugain.org/edugain-v2.xml

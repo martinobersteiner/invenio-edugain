@@ -11,11 +11,12 @@
 
 {% block javascript %}
   {{ super() }}
-  {{ webpack['invenio-edugain-discovery.js'] }}
+  {{ webpack['shibboleth-eds.js'] }}
 {% endblock javascript %}
 
 {% block css %}
   {{ super() }}
+  {{ webpack['shibboleth-eds-css.css'] }}
 {% endblock css %}
 
 {% block page_body %}
@@ -29,8 +30,8 @@
           <div class="divider hidden"></div>
           <h3 class="ui login header">Find your institution</h3>{# TODO: translate #}
           <div class="ui divider"></div>
-          <div id="edugain-discovery" class="field" data-idp-data-json='{{ idp_data_dict | tojson }}'>
-            <!-- content is react-controlled -->
+          <div id="idpSelect">
+            <!-- content is provided by shibboleth EDS -->
           </div>
           <div style="text-align: left;">
             {# TODO: probably open an accordion on clicking; make part of react-app? #}

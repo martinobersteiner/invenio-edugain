@@ -23,6 +23,8 @@ class IdPData(db.Model):
     #          - can only display one name
     #          - but all names should be findable when searching with disco service
     # TODO: language-preference for displaynames
+    # TODO: displayname/logo_url/search_string should be nullable overwrites
+    #       (right now their info is duplicated from settings...)
     displayname: Mapped[str]
     enabled: Mapped[bool] = mapped_column(default=False)
     logo_url: Mapped[str]

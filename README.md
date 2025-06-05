@@ -1,5 +1,8 @@
 # invenio-edugain
 
+Most of this package is licensed under the MIT license.
+However, it also contains code from shibboleth, which is licensed under Apache 2.0.
+
 > [!WARNING]
 > This package is not implemented yet.
 >
