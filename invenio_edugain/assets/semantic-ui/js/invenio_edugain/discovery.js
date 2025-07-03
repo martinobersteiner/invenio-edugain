@@ -22,8 +22,12 @@ function redirectToIdp(idpId) {
   window.location.href = url.toString();
 }
 
+// TODO: sort entries somehow
+// TODO: consider computing options in backend already
+// TODO: this re-renders Form.Dropdown unnecessarily often due to `options` being recomputed all the time
 function IdpDiscovery({ idpData }) {
   const options = Object.entries(idpData).map(([key, { displayname }]) => ({
+    // TODO: image: logoUrl,  // this doesn't load due to content-security policy...
     key,
     text: displayname,
     value: key,
@@ -33,6 +37,7 @@ function IdpDiscovery({ idpData }) {
       clearable
       fluid
       noResultsMessage="No results found." // TODO: translate
+      // TODO: this automatically selects first item when clicking out of the dropdown
       onChange={(_event, { value }) => {
         if (value) redirectToIdp(value);
       }}

@@ -17,9 +17,18 @@ edugain = WebpackThemeBundle(
         "semantic-ui": {
             "aliases": {
                 "@js/invenio_edugain": "js/invenio_edugain",
+                "@js/shibboleth_eds": "js/shibboleth-embedded-ds-1.3.0/nonminimised",
+                "@less/invenio_edugain": "less/invenio_edugain",
+                "@translations/invenio_edugain": "translations/invenio_edugain",
             },
             "copy": {},
             "dependencies": {
+                # axios
+                # i18next | babel | react-i18next
+                # lodash
+                # react-invenio-forms
+                # react-overridable
+                # semantic-ui-react
                 "jquery": "^3.2.1",
                 "prop-types": "^15.7.2",
                 "react": "^16.13.0",
@@ -28,6 +37,10 @@ edugain = WebpackThemeBundle(
             "devDependencies": {},
             "entry": {
                 "invenio-edugain-discovery": "./js/invenio_edugain/discovery.js",
+                "shibboleth-eds": "./js/shibboleth-embedded-ds-1.3.0/nonminimised/idpselect.js",
+                "shibboleth-eds-less": "./less/invenio_edugain/disco_service.less",
+                # TODO: remove the following
+                "shibboleth-eds-css": "./js/shibboleth-embedded-ds-1.3.0/idpselect.css",
             },
             "peerDependencies": {},
         },

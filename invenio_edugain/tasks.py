@@ -20,6 +20,7 @@ def ingest_idp_data(file_or_url: str) -> None:
     """Ingest idp-data from given SAML metadata XML into db."""
     mds = MetadataStore(None, Config())
     if validators.url(file_or_url):
+        # TODO: check signature via passing (check_validity=True, cert=cert_path)
         mds.load("remote", url=file_or_url)
     else:
         mds.load("local", file_or_url)
