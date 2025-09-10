@@ -46,3 +46,4 @@ class InvenioEdugain:
         # TODO: consider grouping them as EDUGAIN_CRYPTOGRAPHIC_CREDENTIALS
         #       this would be loaded into config some other way; e.g. config-file, env-vars
         # TODO: EDUGAIN_SALT for hashing external ids
+        # TODO: consider not setting crypto-stuff to app.config

@@ -239,6 +239,7 @@ class AuthnInfo:
         else:
             username = fullname
 
+        # TODO: sanitize names (if they include ae, oe, ue for instance)
         # invenio usernames must match invenio_userprofiles.validators:username_regex
         # i.e. start with letter, >=3 characters, may only contain letters, digits, `-`, `_`
         # TODO: this does its best to create a username suggestion for now
