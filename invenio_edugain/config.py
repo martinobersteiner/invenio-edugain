@@ -7,6 +7,8 @@
 
 """Configuration for invenio-edugain."""
 
+from .saml_config import config_dict
+
 EDUGAIN_LOGIN_ENABLED = True
 
 EDUGAIN_ROUTES = {
@@ -17,4 +19,4 @@ EDUGAIN_ROUTES = {
 }
 
 # TODO: make configuration more convenient than writing the whole config-dict into this var
-EDUGAIN_PYSAML2_CONFIG: dict[str, str | list | dict] = {}
+EDUGAIN_PYSAML2_CONFIG: dict[str, str | list | dict] = config_dict

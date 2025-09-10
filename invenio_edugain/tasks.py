@@ -22,3 +22,5 @@ def ingest_idp_data(
     """Ingest idp-data from given SAML metadata XML into db."""
     mds = load_mdstore(metadata_xml_location, cert_location, fingerprint_sha256)
     ingest.from_mdstore(mds)
+
+    # TODO: return a success-message once invenio-jobs picks that up

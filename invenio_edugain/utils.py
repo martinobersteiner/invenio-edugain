@@ -7,6 +7,7 @@
 
 """Utils for invenio-edugain."""
 
+import string
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -47,10 +48,11 @@ NS_PREFIX = {
 """Names for namespaces that SAML commonly uses."""
 
 
-# TODO: cache
+# TODO: cache, same cache as below
 def get_idp_data_dict() -> dict:
     """Get from db a dict of the IdP-data of *enabled* idps."""
     query = select(IdPData).where(IdPData.enabled == true())
+    # TODO: following type is actually iterable[IdPData]
     idps_data: list[IdPData] = db.session.execute(query).scalars()
 
     return {
@@ -144,6 +146,9 @@ class MetaDataFlaskSQL(InMemoryMetaData):
         """Init."""
         super().__init__(attrc, **kwargs)
 
+    # TODO: load only passed idp-id?
+    # TODO: cache, same cache as above
+    # TODO: pass some positional arg that actually does something? e.g. `db`
     def load(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401, ARG002
         """Load."""
         for idp in db.session.scalars(
@@ -161,8 +166,10 @@ class AuthnInfo:
     """Parsed authentication info."""
 
     id_by_method: dict[str, str | None]  # NOTE: ids hashed, preferred methods first
-    additional_attributes: list[str]  # attributes the IdP sent despite us not asking
+    # attributes the IdP additionally sent despite us not asking:
+    additional_attributes: dict[str, list[str]]
     affiliations: list[str]
+    # TODO: empty list fails below in create_user!
     emails: list[str]  # potentially empty list
     full_name: str  # potentially empty string
     next: str | None
@@ -176,6 +183,7 @@ class AuthnInfo:
         next_: str | None = None,
     ) -> Self:
         """Create authentication info from a saml xml."""
+        # TODO: the following four lines appear way often in exactly that order...
         config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
         config = SPConfig()
         config.load(config_dict)
@@ -220,17 +228,39 @@ class AuthnInfo:
         affiliations = ava.pop("eduPersonScopedAffiliation", [])
         displaynames = ava.pop("displayName", [])
         emails = ava.pop("mail", [])
-        emails.extend(ava["email"])  # TODO: remove
         given_names = ava.pop("givenName", [])
         family_names = ava.pop("sn", [])
 
         fullname = (" ".join(given_names) + " " + " ".join(family_names)).strip()
-        if displaynames:
-            username = displaynames[0]
-        elif emails:
+        if emails:
             username = emails[0].split("@")[0]
+        elif displaynames:
+            username = displaynames[0]
         else:
             username = fullname
+
+        # invenio usernames must match invenio_userprofiles.validators:username_regex
+        # i.e. start with letter, >=3 characters, may only contain letters, digits, `-`, `_`
+        # TODO: this does its best to create a username suggestion for now
+        #       however, it should be impossible for this to fail
+        #       also, user should be able to chose this at account-creation time to allow resolving username clashes
+        #       also, user should be able to chose linking an existing account anyway
+        #       hence, eventually:
+        #         - rename field `.suggested_username` or such
+        #         - present user a form for stuff like this
+        #         - consider doing this in another invenio-package, as oauthclient/local-login might want this too
+        if not username:
+            msg = "no username was provided"
+            raise AuthnResponseError(msg)
+        username = username.replace(" ", "-")
+        username = username.replace(".", "_")
+        username = username.replace("+", "_")
+        allowed_chars = string.ascii_letters + string.digits + "-_"
+        username = "".join(char for char in username if char in allowed_chars)
+        if username[0] not in string.ascii_letters:
+            username = "X" + username
+        if len(username) < 3:
+            username = "X" * (3 - len(username)) + username
 
         first_found_user = None
         for method, id_ in id_by_method.items():
@@ -254,6 +284,7 @@ class AuthnInfo:
         )
 
 
+# TODO: further args, preferences in particular
 def create_user(authn_info: AuthnInfo) -> User:
     """Create user and link it with first method in authn_info.id_by_method.
 
@@ -284,6 +315,7 @@ def create_user(authn_info: AuthnInfo) -> User:
     )
     if form.validate():
         # see invenio_saml.invenio_accounts.utils:account_register
+        # TODO: make this configurable
         confirmed_at = datetime.now(UTC)
         data = {
             **form.to_dict(),
@@ -293,13 +325,18 @@ def create_user(authn_info: AuthnInfo) -> User:
             data["password"] = ""
         user = register_user(**data)
         if not data["password"]:
+            # TODO: this is from invenio-saml, does user.password=None prevent local login?
             user.password = None
         current_app.extensions["security"].datastore.commit()
     else:
+        from .debug import logger
+
+        logger.debug(form.errors)
         msg = "form failed to validate when trying to create a user"
         raise AuthnResponseError(msg)
 
     UserIdentity.create(user, method=method, external_id=external_id)
+    # TODO: consider linking with all of the others too
     db.session.commit()
 
     return user

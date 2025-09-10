@@ -1,0 +1,167 @@
+{% extends config.ACCOUNTS_BASE_TEMPLATE %}
+
+
+{% block javascript %}
+  {{ super() }}
+  {{ webpack['shibboleth-eds.js'] }}
+{% endblock javascript %}
+
+{% block css %}
+  {{ super() }}
+  {{ webpack['shibboleth-eds-less.css'] }}
+  {# {{ webpack['shibboleth-eds-css.css'] }} #}
+{% endblock css %}
+
+
+{% block page_body %}
+  <div class="spacer-long"></div>
+  <div class="spacer-long"></div>
+  <div class="ui container">
+    <div class="ui centered grid padded">
+      <div class="ui padded segments large form">
+        <div class="ui segment padded">
+          <div class="divider hidden"></div>
+          <h3 class="ui login header">Find your institution</h3>{# TODO: translate #}
+          <div class="ui divider" style="width:600px"></div>
+          <div id="idpSelect">
+                <!-- content is provided by shibboleth EDS -->
+                <div id="idpSelectIdPSelector">
+                    <div id="idpSelectPreferredIdPTile">
+                        <div class="IdPSelectTextDiv">Use a suggested selection:</div>
+                        <div class="IdPSelectPreferredIdPButton" title="000 MOCK IDP FOR TEST PURPOSES 00...">
+                            <a href="https://localhost:5000/saml/login/authn-request?entityID=https%3A%2F%2Fsaml.example.com%2Fentityid">
+                                <div class="IdPSelectPreferredIdPImg"><img class="IdPSelectIdPImg" src="" alt="000 MOCK IDP FOR TEST PURPOSES 000" width="69" height="69"></div>
+                                <div class="IdPSelectTextDiv">000 MOCK IDP FOR TEST PURPOSES 00...</div>
+                            </a>
+                        </div>
+                        <div class="IdPSelectPreferredIdPButton" title="Technische Universität Graz">
+                            <a href="https://localhost:5000/saml/login/authn-request?entityID=https%3A%2F%2Fsso.tugraz.at%2Fidp%2Fshibboleth">
+                                <div class="IdPSelectPreferredIdPImg"><img class="IdPSelectIdPImg" src="https://static.tugraz.at/static/core/latest/icons/favicon.ico" alt="Technische Universität Graz" width="69" height="69"></div>
+                                <div class="IdPSelectTextDiv">Technische Universität Graz</div>
+                            </a>
+                        </div>
+                    </div>
+                    <div id="idpSelectIdPEntryTile">
+                        <form action="https://localhost:5000/saml/login/authn-request" method="GET" autocomplete="OFF">
+                            <label for="idpSelectInput-new">
+                                <div class="IdPSelectTextDiv">Or enter your organization's name</div>
+                            </label>
+                            <div class="fields">
+                                <div class="ten wide field">
+                                    <input type="text" id="idpSelectInput-new" role="combobox" aria-controls="IdPSelectDropDown" aria-owns="IdPSelectDropDown" aria-expanded="false" aria-activedescendant="" class="">
+                                    <input type="hidden" name="entityID" value="-">
+                                </div>
+                                <div class="six wide field">
+                                        <input type="submit" value="Continue" id="idpSelectSelectButton-new" disabled="" class="ui submit button">
+                                </div>
+                            </div>
+                        </form>
+                        <a href="#" class="IdPSelectDropDownToggle">Allow me to pick from a list</a>
+                        <a href="https://wiki.shibboleth.net/confluence/display/SHIB2/DSRoadmap" class="IdPSelectHelpButton">Help</a>
+                    </div>
+                    <div id="idpSelectIdPListTile" style="display: none;">
+                        <form action="https://localhost:5000/saml/login/authn-request" method="GET" autocomplete="OFF">
+                            <label for="idpSelectSelector">
+                                <div class="IdPSelectTextDiv">Or select your organization from the list below</div>
+                            </label>
+                            <select id="idpSelectSelector" name="entityID">
+                                <option value="-">Please select your organization...</option>
+                                <option value="https://saml.example.com/entityid">000 MOCK IDP FOR TEST PURPOSES 000</option>
+                                <option value="https://idp.aco.net/idp/shibboleth">ACOnet Team</option>
+                                <option value="https://idp.akbild.ac.at/idp/shibboleth">Akademie der bildenden Künste Wien</option>
+                                <option value="https://login.bruckneruni.at/idp/shibboleth">Anton Bruckner Privatuniversität</option>
+                                <option value="https://sso.suttneruni.at/idp/shibboleth">Bertha von Suttner Privatuniversität</option>
+                                <option value="http://adfs.noc-science.at/adfs/services/trust">Bundesministerium für Bildung, Wissenschaft, Forschung</option>
+                                <option value="https://shibboleth.vbc.ac.at/idp/shibboleth">Campus Vienna Biocenter (GMI, IMBA, IMP, VBCF, CLIP)</option>
+                                <option value="https://idp.donau-uni.ac.at/idp/shibboleth">Donau-Universität Krems</option>
+                                <option value="https://idp.fernfh.ac.at/idp/shibboleth">Ferdinand Porsche FernFH</option>
+                                <option value="https://eduid.campus02.at/idp/shibboleth">FH CAMPUS 02</option>
+                                <option value="https://login.fh-campuswien.ac.at/idp/shibboleth">FH Campus Wien</option>
+                                <option value="https://shibboleth.fh-vie.ac.at/idp/shibboleth">FH des BFI Wien</option>
+                                <option value="https://sso.fhgooe.ac.at/idp/shibboleth">FH Gesundheitsberufe OÖ</option>
+                                <option value="https://idp.fh-joanneum.at/idp/shibboleth">FH Joanneum</option>
+                                <option value="https://idp.fh-kaernten.at/idp/shibboleth">FH Kärnten</option>
+                                <option value="https://auth.fh-kufstein.ac.at/idp/shibboleth">FH Kufstein</option>
+                                <option value="https://weblogin.fh-ooe.at/idp/shibboleth">FH Oberösterreich</option>
+                                <option value="https://sso.fh-salzburg.ac.at/idp/shibboleth">FH Salzburg</option>
+                                <option value="https://sso.fhstp.ac.at/idp/shibboleth">FH St. Pölten</option>
+                                <option value="https://david.technikum-wien.at/idp/shibboleth">FH Technikum Wien</option>
+                                <option value="https://login.fhv.at/shibboleth">FH Vorarlberg</option>
+                                <option value="https://idp.fh-wien.ac.at/idp/shibboleth">FH Wien der WKW</option>
+                                <option value="https://shibboleth.fhwn.ac.at/idp/shibboleth">FH Wiener Neustadt</option>
+                                <option value="https://sso.fwf.ac.at/auth/realms/sso">FWF Österreichischer Wissenschaftsfonds</option>
+                                <option value="https://eduid.geosphere.at/idp/entity">GeoSphere Austria</option>
+                                <option value="https://idp.gmpu.ac.at/idp/shibboleth">Gustav Mahler Privatuniversität</option>
+                                <option value="https://idp.fh-burgenland.at/idp/shibboleth">Hochschule Burgenland</option>
+                                <option value="https://sso.haup.ac.at/idp/shibboleth">Hochschule für Agrar- und Umweltpädagogik</option>
+                                <option value="https://login.spengergasse.at/idp/shibboleth">HTL Spengergasse</option>
+                                <option value="https://sblt.fh-krems.ac.at/idp/shibboleth">IMC Krems</option>
+                                <option value="https://shib.ihs.ac.at/idp/shibboleth">Institut für Höhere Studien (IHS)</option>
+                                <option value="https://idp.ista.ac.at/idp/shibboleth">Institute of Science and Technology Austria (ISTA)</option>
+                                <option value="https://idp.iiasa.ac.at/idp/shibboleth">International Institute for Applied Systems Analysis (IIAS</option>
+                                <option value="https://shibboleth.im.jku.at/idp/shibboleth">Johannes Kepler Universität Linz</option>
+                                <option value="https://idp.jhp.ac.at/idp/shibboleth">Joseph Haydn Privathochschule</option>
+                                <option value="https://idp.kl.ac.at/idp/shibboleth">Karl Landsteiner Privatuniversität für Gesundheitswissensc</option>
+                                <option value="https://sso.ku-linz.at/idp/shibboleth">Katholische Privatuniversität Linz</option>
+                                <option value="https://shibboleth.khm.at/idp/shibboleth">KHM-Museumsverband</option>
+                                <option value="https://sso.kph-es.at/idp/shibboleth">Kirchliche Pädagogische Hochschule Edith Stein</option>
+                                <option value="https://idp.kphvie.ac.at/idp/shibboleth">Kirchliche Pädagogische Hochschule Wien/Krems (KPH)</option>
+                                <option value="https://sso.lbs.ac.at/idp/shibboleth">Lauder Business School</option>
+                                <option value="https://idp.mci4me.at/idp/shibboleth">Management Center Innsbruck</option>
+                                <option value="https://idp.meduni-graz.at/idp/shibboleth">Medizinische Universität Graz</option>
+                                <option value="https://shibboleth.i-med.ac.at/idp/shibboleth">Medizinische Universität Innsbruck</option>
+                                <option value="https://idp.meduniwien.ac.at/idp/shibboleth">Medizinische Universität Wien</option>
+                                <option value="https://weblogin.unileoben.ac.at/idp/shibboleth">Montanuniversität Leoben</option>
+                                <option value="https://nhm-eduid.nhm-wien.ac.at/idp/shibboleth">Naturhistorisches Museum Wien (NHM)</option>
+                                <option value="https://sso.ndu.ac.at/idp/shibboleth">New Design University</option>
+                                <option value="https://openidp.aco.net/saml">OpenIDP (Gäste)</option>
+                                <option value="https://weblogin.oeaw.ac.at/idp/shibboleth">Österreichische Akademie der Wissenschaften</option>
+                                <option value="https://idp.mediathek.at/idp/shibboleth">Österreichische Mediathek</option>
+                                <option value="https://eduid.ph-kaernten.ac.at/idp/shibboleth">Pädagogische Hochschule Kärnten</option>
+                                <option value="https://auth.ph-noe.ac.at/idp/shibboleth">Pädagogische Hochschule Niederösterreich</option>
+                                <option value="https://sso.ph-ooe.at/idp/shibboleth">Pädagogische Hochschule Oberösterreich</option>
+                                <option value="https://idp.phsalzburg.at/idp/shibboleth">Pädagogische Hochschule Salzburg Stefan Zweig</option>
+                                <option value="https://idp.phst.at/idp/shibboleth">Pädagogische Hochschule Steiermark</option>
+                                <option value="https://idp.ph-tirol.ac.at/idp/shibboleth">Pädagogische Hochschule Tirol</option>
+                                <option value="https://sso.ph-vorarlberg.ac.at/idp/shibboleth">Pädagogische Hochschule Vorarlberg</option>
+                                <option value="https://idp.phwien.ac.at/idp">Pädagogische Hochschule Wien</option>
+                                <option value="https://sso.pmu.ac.at/idp">Paracelsus Medizinische Privatuniversität</option>
+                                <option value="https://sso.sbg.ac.at/idp/shibboleth">Paris Lodron Universität Salzburg</option>
+                                <option value="https://portal.tirol.gv.at/idp/shibboleth">Portal Tirol</option>
+                                <option value="https://login.tirol.gv.at/idp/shibboleth">Portal Tirol (neu ab 2025-05-05)</option>
+                                <option value="https://sso.kphgraz.at/idp/shibboleth">PPH Augustinum Graz</option>
+                                <option value="https://idp.ph-burgenland.at/idp/shibboleth">Private Pädagogische Hochschule Burgenland</option>
+                                <option value="https://sso.ph-linz.at/idp/shibboleth">Private Pädagogische Hochschule der Diözese Linz</option>
+                                <option value="https://secure.salzburgresearch.at/idp/shibboleth">Salzburg Research</option>
+                                <option value="https://login.sfu.ac.at/idp/shibboleth">Sigmund Freud Privatuniversität</option>
+                                <option value="https://sso.tugraz.at/idp/shibboleth">Technische Universität Graz</option>
+                                <option value="https://idp.zid.tuwien.ac.at/saml2">Technische Universität Wien</option>
+                                <option value="https://idp.tmw.at/idp/shibboleth">Technisches Museum Wien</option>
+                                <option value="https://idp.tirol-kliniken.at/idp/shibboleth">Tirol Kliniken | fh gesundheit</option>
+                                <option value="https://idp.umit-tirol.at/idp/shibboleth">UMIT Tirol – Die Tiroler Privatuniversität</option>
+                                <option value="https://shibboleth.uni-ak.ac.at/idp/shibboleth">Universität für angewandte Kunst Wien</option>
+                                <option value="https://idp.boku.ac.at/idp/shibboleth">Universität für Bodenkultur Wien</option>
+                                <option value="https://aai-01.internet.ufg.ac.at/idp/shibboleth">Universität für künstlerische und industrielle Gestaltung </option>
+                                <option value="https://login.kug.ac.at/idp/shibboleth">Universität für Musik und darstellende Kunst Graz</option>
+                                <option value="https://shib.mdw.ac.at/idp/shibboleth">Universität für Musik und darstellende Kunst Wien</option>
+                                <option value="https://zididp.uni-graz.at/idp/shibboleth">Universität Graz</option>
+                                <option value="https://idp.uibk.ac.at/idp/shibboleth">Universität Innsbruck</option>
+                                <option value="https://shib.uni-klu.ac.at/idp/shibboleth">Universität Klagenfurt</option>
+                                <option value="https://shibboleth.moz.ac.at/idp/shibboleth">Universität Mozarteum Salzburg</option>
+                                <option value="https://weblogin.univie.ac.at/shibboleth">Universität Wien</option>
+                                <option value="https://idp.vu-wien.ac.at/idp/shibboleth">Veterinärmedizinische Universität Wien</option>
+                                <option value="https://idp.wu.ac.at/idp/shibboleth">Wirtschaftsuniversität Wien</option>
+                            </select>
+                            <input type="submit" value="Continue" id="idpSelectListButton">
+                        </form>
+                        <a href="#" class="IdPSelectDropDownToggle">Allow me to specify the site</a>
+                        <a href="https://wiki.shibboleth.net/confluence/display/SHIB2/DSRoadmap" class="IdPSelectHelpButton">Help</a>
+                    </div>
+                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock page_body %}
