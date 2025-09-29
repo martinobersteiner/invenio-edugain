@@ -65,8 +65,9 @@ def disco_feed() -> list:
     """Return disco feed for use with shibboleth EDS."""
     from saml2.mdstore import MetadataStore
 
-    from .debug import logger
+    from .debug import init_logger, logger
 
+    init_logger()
     config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
     logger.debug(
         f"`metadata` in config_dict: {None if config_dict is None else 'metadata' in config_dict}",

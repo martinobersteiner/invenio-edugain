@@ -151,8 +151,9 @@ class MetaDataFlaskSQL(InMemoryMetaData):
     # TODO: pass some positional arg that actually does something? e.g. `db`
     def load(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401, ARG002
         """Load."""
-        from .debug import logger
+        from .debug import init_logger, logger
 
+        init_logger()
         logger.debug("entered")
         query = db.select(IdPData).where(IdPData.enabled == true())
         enabled_idps = list(db.session.scalars(query))

@@ -8,14 +8,29 @@ from traceback import format_exception
 from lxml import etree
 
 logger = getLogger("invenio_edugain")
-logger.setLevel("DEBUG")
-handler = FileHandler("/opt/invenio/var/instance/logs/edugain.log")
-handler.setLevel("DEBUG")
-formatter = Formatter(
-    "[%(asctime)s] [%(levelname)s] [%(name)s.%(funcName)s] %(message)s",
-)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger_is_initialized = False
+
+
+def init_logger() -> None:
+    """Initialize logger.
+
+    File does not exist when building docker containers,
+    hence delay initialization until this is called.
+    """
+    global logger_is_initialized  # noqa: PLW0603
+    if logger_is_initialized:
+        return
+
+    logger.setLevel("DEBUG")
+    handler = FileHandler("/opt/invenio/var/instance/logs/edugain.log")
+    handler.setLevel("DEBUG")
+    formatter = Formatter(
+        "[%(asctime)s] [%(levelname)s] [%(name)s.%(funcName)s] %(message)s",
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    logger_is_initialized = True
 
 
 class AuthnHandler(StreamHandler):
