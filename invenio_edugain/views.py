@@ -65,10 +65,16 @@ def disco_feed() -> list:
     """Return disco feed for use with shibboleth EDS."""
     from saml2.mdstore import MetadataStore
 
+    from .debug import logger
+
     config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
+    logger.debug(
+        f"`metadata` in config_dict: {None if config_dict is None else 'metadata' in config_dict}",
+    )
     config = Config()
     config.load(config_dict)
     mds: MetadataStore = config.metadata
+    logger.debug(f".metadata after loading: {None if mds is None else mds.keys()}")
 
     idp_ids: list[str] = sorted(mds.identity_providers())
     feed = []

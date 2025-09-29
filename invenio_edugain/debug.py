@@ -2,12 +2,20 @@
 
 from collections.abc import Callable, Mapping
 from functools import wraps
-from logging import LogRecord, StreamHandler, getLogger
+from logging import FileHandler, Formatter, LogRecord, StreamHandler, getLogger
 from traceback import format_exception
 
 from lxml import etree
 
-logger = getLogger("saml2.edugain")  # create sub-logger of root-logger 'saml2'
+logger = getLogger("invenio_edugain")
+logger.setLevel("DEBUG")
+handler = FileHandler("/opt/invenio/var/instance/logs/edugain.log")
+handler.setLevel("DEBUG")
+formatter = Formatter(
+    "[%(asctime)s] [%(levelname)s] [%(name)s.%(funcName)s] %(message)s",
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class AuthnHandler(StreamHandler):
