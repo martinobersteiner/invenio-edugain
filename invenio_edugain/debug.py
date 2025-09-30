@@ -2,35 +2,26 @@
 
 from collections.abc import Callable, Mapping
 from functools import wraps
-from logging import FileHandler, Formatter, LogRecord, StreamHandler, getLogger
+from logging import LogRecord, StreamHandler, getLogger
 from traceback import format_exception
+from typing import Any
 
 from lxml import etree
 
 logger = getLogger("invenio_edugain")
-logger_is_initialized = False
 
 
-def init_logger() -> None:
-    """Initialize logger.
+def log(*args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    """Log messages compatibly with pysaml2 logging."""
+    # NOTE: pysaml2 adds handler, so no need to add one here
 
-    File does not exist when building docker containers,
-    hence delay initialization until this is called.
-    """
-    global logger_is_initialized  # noqa: PLW0603
-    if logger_is_initialized:
-        return
+    # pysaml2 disables loggers during its work, but we need logging during that
+    was_disabled = logger.disabled
+    logger.disabled = False
 
-    logger.setLevel("DEBUG")
-    handler = FileHandler("/opt/invenio/var/instance/logs/edugain.log")
-    handler.setLevel("DEBUG")
-    formatter = Formatter(
-        "[%(asctime)s] [%(levelname)s] [%(name)s.%(funcName)s] %(message)s",
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    logger.debug(*args, **kwargs)
 
-    logger_is_initialized = True
+    logger.disabled = was_disabled
 
 
 class AuthnHandler(StreamHandler):
