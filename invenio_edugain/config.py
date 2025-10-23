@@ -7,6 +7,9 @@
 
 """Configuration for invenio-edugain."""
 
+from .saml_config import config_dict
+from .shibboleth_config import shib_dict
+
 EDUGAIN_ALLOW_IMGSRC_CSP: bool | None = None
 """Whether to allow dico-page to set the `imgsrc: *` content-security-policy.
 
@@ -27,6 +30,7 @@ EDUGAIN_ROUTES = {
 }
 
 # TODO: make configuration more convenient than writing the whole config-dict into this var
-EDUGAIN_PYSAML2_CONFIG: dict[str, str | list | dict] = {}
+# TODO: consider setting this None to preempt by-ref shenanigans
+EDUGAIN_PYSAML2_CONFIG: dict[str, str | list | dict] = config_dict
 
-EDUGAIN_SHIBBOLETH_EDS_CONFIG: dict[str, str | list | dict] = {}
+EDUGAIN_SHIBBOLETH_EDS_CONFIG: dict[str, str | list | dict] = shib_dict

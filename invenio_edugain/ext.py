@@ -31,6 +31,8 @@ class InvenioEdugain:
             if k.startswith("EDUGAIN_"):
                 app.config.setdefault(k, getattr(config, k))
 
+        # TODO: the following should be folded into config-building
+        # TODO: consider testing for raised exception when misconfigured
         if not app.config["EDUGAIN_PYSAML2_CONFIG"]:
             app.config["EDUGAIN_PYSAML2_CONFIG"] = {}
         pysaml2_config = app.config["EDUGAIN_PYSAML2_CONFIG"]
@@ -46,3 +48,22 @@ class InvenioEdugain:
             encryption_config["key_file"] = encryption_key
         if encryption_cert := app.config.get("EDUGAIN_ENCRYPTION_CRT"):
             encryption_config["cert_file"] = encryption_cert
+
+
+def finalize_app(app: Flask) -> None:
+    """Finalize app."""
+    set_saml2_config(app)
+
+
+def finalize_api_app(app: Flask) -> None:
+    """Finalize app for api."""
+    set_saml2_config(app)
+
+
+def set_saml2_config(app: Flask) -> None:
+    """Build and set configuration for pysaml2."""
+    if app.config["EDUGAIN_BUILD_CONFIG"]:
+        built_config = build_config(app)
+        if post_processor := app.config.get("EDUGAIN_CONFIG_POSTPROCESSOR"):
+            built_config = post_processor(built_config)
+        app.config["EDUGAIN_PYSAML2_CONFIG"] = built_config

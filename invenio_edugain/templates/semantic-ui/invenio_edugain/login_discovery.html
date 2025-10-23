@@ -20,6 +20,7 @@
 {% endblock css %}
 
 {% block page_body %}
+  {# TODO: this is made to look like TU Graz's login page; change this #}
   <div class="spacer-long"></div>
   <div class="spacer-long"></div>
   <div class="ui container">
@@ -30,7 +31,23 @@
           <h3 class="ui login header">Find your institution</h3>{# TODO: translate #}
           <div class="ui divider"></div>
           <div id="idpSelect" data-shibboleth-eds-config='{{ shibboleth_eds_config | tojson }}'>
+            {# TODO: prevent changing id='idpSelect' (wherever data-... is on cannot be changed, might as well have just one) #}
             <!-- content is provided by shibboleth-eds -->
+          </div>
+          <div style="margin-top: 1rem; text-align: left; width: 600px;">
+          <details>
+            <summary>
+              {# TODO: translate #}
+              Why isn't my institution showing?
+            </summary>
+            <p>
+              {# TODO: translate #}
+              To ensure security of the platform, organizations are only added after our IT team found them secure.
+              <br>
+              {# TODO: email #}
+              To get white-listed, send an email to our IT team: [email here]
+            </p>
+          </details>
           </div>
         </div>
       </div>

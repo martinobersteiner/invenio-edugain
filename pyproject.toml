@@ -10,7 +10,7 @@ authors = [
   {name = "Graz University of Technology", email = "info@tugraz.at"},
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
@@ -42,6 +42,9 @@ elasticsearch7 = [
 opensearch2 = [
   "invenio-search[opensearch2]>=3.0.0,<4.0.0",
 ]
+
+[project.entry-points."flask.commands"]
+edugain = "invenio_edugain.cli:edugain"
 
 [project.entry-points."invenio_assets.webpack"]
 invenio_edugain = "invenio_edugain.webpack:edugain"
@@ -81,8 +84,9 @@ exclude = [
 path = "invenio_edugain/__init__.py"
 
 
-[tool.isort]
-profile = "black"
+[tool.mypy]
+exclude = ["docs"]
+ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
@@ -90,6 +94,8 @@ addopts = "--black --cov=invenio_edugain --cov-report=term-missing"
 testpaths = "tests invenio_edugain"
 
 
+# [tool.ruff]
+# exclude = ["docs"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
@@ -108,6 +114,7 @@ ignore = [
   "UP009",
 ]
 fixable = [
+  "I001",  # unsorted imports
   "RUF022",  # unsorted __all__
 ]
 
