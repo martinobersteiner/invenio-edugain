@@ -26,6 +26,10 @@ indent_size = 2
 [*.html]
 indent_size = 2
 
+# JSON
+[*.json]
+indent_size = 2
+
 # JS
 [*.js]
 indent_size = 2
@@ -36,6 +40,10 @@ indent_size = 2
 
 # Python files
 [*.py]
+indent_size = 4
+
+# ReStructured Text
+[*.rst]
 indent_size = 4
 
 # YAML

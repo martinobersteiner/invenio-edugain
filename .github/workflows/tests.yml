@@ -29,3 +29,8 @@ jobs:
       python-version: '["3.11", "3.12", "3.13"]'
   javascript_tests:
     uses: inveniosoftware/workflows/.github/workflows/tests-js.yml@master
+    with:
+      translations-working-directory: ./todo
+      # default is "./invenio_edugain/assets/semantic-ui/js/invenio_edugain"
+      # to also include our shibboleth-eds copy, we use a parent-directory as working-directory
+      working-directory: "./invenio_edugain/assets/semantic-ui"

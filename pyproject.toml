@@ -10,7 +10,7 @@ authors = [
   {name = "Graz University of Technology", email = "info@tugraz.at"},
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
@@ -19,7 +19,7 @@ classifiers = [
 keywords = ["invenio", "edugain"]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
   "invenio-celery>=2.0.0,<3.0.0",
   "invenio-db>=2.0.0,<3.0.0",
@@ -43,17 +43,26 @@ opensearch2 = [
   "invenio-search[opensearch2]>=3.0.0,<4.0.0",
 ]
 
+[project.entry-points."flask.commands"]
+edugain = "invenio_edugain.cli:edugain"
+
 [project.entry-points."invenio_assets.webpack"]
 invenio_edugain = "invenio_edugain.webpack:edugain"
 
 [project.entry-points."invenio_base.api_apps"]
 invenio_edugain = "invenio_edugain:InvenioEdugain"
 
+[project.entry-points."invenio_base.api_finalize_app"]
+invenio_edugain = "invenio_edugain.ext:api_finalize_app"
+
 [project.entry-points."invenio_base.apps"]
 invenio_edugain = "invenio_edugain:InvenioEdugain"
 
 [project.entry-points."invenio_base.blueprints"]
 invenio_edugain = "invenio_edugain.views:create_blueprint"
+
+[project.entry-points."invenio_base.finalize_app"]
+invenio_edugain = "invenio_edugain.ext:finalize_app"
 
 [project.entry-points."invenio_celery.tasks"]
 invenio_edugain = "invenio_edugain.tasks"
@@ -81,8 +90,9 @@ exclude = [
 path = "invenio_edugain/__init__.py"
 
 
-[tool.isort]
-profile = "black"
+[tool.mypy]
+exclude = ["docs"]
+ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
@@ -90,6 +100,8 @@ addopts = "--black --cov=invenio_edugain --cov-report=term-missing"
 testpaths = "tests invenio_edugain"
 
 
+# [tool.ruff]
+# exclude = ["docs"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
@@ -108,6 +120,7 @@ ignore = [
   "UP009",
 ]
 fixable = [
+  "I001",  # unsorted imports
   "RUF022",  # unsorted __all__
 ]
 
