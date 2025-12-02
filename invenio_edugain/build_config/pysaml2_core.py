@@ -274,6 +274,7 @@ class Pysaml2ConfigCore(Pysaml2ConfigCoreBase):
     contact: Pysaml2ConfigCoreContacts = field(default=ABSENT)  # type: ignore[assignment]
     credentials: Pysaml2ConfigCoreCryptographicCredentials = field(default=ABSENT)  # type: ignore[assignment]
     org: Pysaml2ConfigCoreOrganization = field(default=ABSENT)  # type: ignore[assignment]
+    # TODO: check domains
     server_domain_main: str = field_for("EDUGAIN_MAIN_SERVER_DOMAIN")
     server_domain_others: list[str] = field_for(  # noqa: RUF009
         "EDUGAIN_OTHER_SERVER_DOMAINS",

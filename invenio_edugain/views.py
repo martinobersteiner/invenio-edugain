@@ -22,21 +22,44 @@ from flask import (
     request,
 )
 from flask_security import login_user
+from invenio_db import db
 from invenio_i18n.proxies import current_i18n
+from invenio_oauthclient.utils import get_safe_redirect_target
 from saml2.client import Saml2Client
 from saml2.config import Config, SPConfig
 from saml2.mdstore import MetadataStore
 from saml2.metadata import entity_descriptor
+from sqlalchemy import true
 from werkzeug.wrappers import Response as BaseResponse
 
+from .debug import log_error, logger
+from .models import IdPData
 from .utils import (
     NS_PREFIX,
     AuthnInfo,
     AuthnResponseError,
     create_user,
+    secure_redirect_url,
 )
 
 
+def debug_return_error(func):  # noqa: ANN001, ANN201
+    """For debugging purposes: return formatted call-stack trace rather than 404 page."""
+    import functools  # noqa: PLC0415
+
+    @functools.wraps(func)
+    def decoed():  # noqa: ANN202
+        try:
+            return func()
+        except Exception as e:  # noqa: BLE001
+            from traceback import format_exception  # noqa: PLC0415
+
+            return format_exception(e)
+
+    return decoed
+
+
+@debug_return_error
 def login_discover() -> str:
     """Discovery page for choosing an IdP."""
     shibboleth_eds_config = current_app.config["EDUGAIN_SHIBBOLETH_EDS_CONFIG"]
@@ -48,6 +71,7 @@ def login_discover() -> str:
     )
 
 
+@debug_return_error
 def disco_feed() -> list:
     """Return disco feed for use with shibboleth EDS."""
     config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
@@ -55,9 +79,17 @@ def disco_feed() -> list:
     config.load(config_dict)
     mds: MetadataStore = config.metadata
 
+    discoverable_query = db.select(IdPData).where(
+        IdPData.discoverable == true(),
+        IdPData.enabled == true(),
+    )
+    discoverable_idp_ids: set[str] = {
+        idp_data.id for idp_data in db.session.scalars(discoverable_query)
+    }
+    available_idp_ids = sorted(set(mds.identity_providers()) & discoverable_idp_ids)
+
     feed = []
-    idp_ids: list[str] = sorted(mds.identity_providers())
-    for idp_id in idp_ids:
+    for idp_id in available_idp_ids:
         # entry is one item in the feed
         entry: dict[str, list | str] = {"entityID": idp_id}
 
@@ -74,6 +106,7 @@ def disco_feed() -> list:
         ]:
             for name_dict in org.get(name_key, []):
                 names_by_lang[name_dict["lang"]].append(name_dict["text"])
+        # TODO: mds.name(idp_id) as fallback (for 'en'?, for all langs (is this even possible))
 
         entry["DisplayNames"] = [
             {"lang": lang, "value": names[0]} for lang, names in names_by_lang.items()
@@ -85,16 +118,25 @@ def disco_feed() -> list:
             for kw in uiinfo.get("keywords", [])
         ]
 
-        entry["Logos"] = [
-            {"value": logo["text"], "height": logo["height"], "width": logo["width"]}
-            for uiinfo in uiinfos
-            for logo in uiinfo.get("logo", [])
-        ]
+        logo_entries = []
+        for uiinfo in uiinfos:
+            for logo in uiinfo.get("logo", []):
+                logo_entry = {
+                    "value": logo["text"],
+                    "height": logo["height"],
+                    "width": logo["width"],
+                }
+                if "lang" in logo:
+                    logo_entry["lang"] = logo["lang"]
+                logo_entries.append(logo_entry)
+        entry["Logos"] = logo_entries
+
         feed.append(entry)
 
     return feed
 
 
+# TODO: consider using a FlaskResource for the following functions
 def authn_request() -> BaseResponse:
     """Send an authorization-request to IdP depending on `request.args`.
 
@@ -105,7 +147,14 @@ def authn_request() -> BaseResponse:
     entityid = request.args.get("entityID")
     if entityid is None:
         abort(400, description="Missing required parameter: id")
-    relay_state = request.args.get("next", "/")  # TODO: make default configurable
+
+    # "relay state" is SAML's name for "URL to redirect to after succesful login"
+    relay_state: str = (
+        get_safe_redirect_target(arg="next")
+        or current_app.config.get("SECURITY_POST_LOGIN_VIEW")
+        or "/"
+    )
+    # TODO: if next is /saml/login or /login or something weird like that, use defaults instead
 
     # pysaml2: create authn-request
     config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
@@ -124,7 +173,10 @@ def authn_request() -> BaseResponse:
     else:
         abort(400, description="No ACS configured for this host")
 
+    # TODO: cache request-id to guard against replay attacks
     _request_id, http_args = client.prepare_for_authenticate(
+        # TODO: sort by alphabet
+        # TODO: binding=HTTP_POST?
         entityid=entityid,
         relay_state=relay_state,
         nsprefix=NS_PREFIX,
@@ -137,7 +189,11 @@ def authn_request() -> BaseResponse:
         for header_name, header_value in http_args["headers"]
         if header_name == "Location"
     ]
-    if len(redirect_urls) != 1:
+    if len(redirect_urls) < 1:
+        # this shouldn't ever happen...
+        msg = "pysaml2 gave no redirect urls"
+        raise ValueError(msg)
+    if len(redirect_urls) > 1:
         # this shouldn't ever happen...
         msg = "pysaml2 gave multiple redirect urls"
         raise ValueError(msg)
@@ -168,22 +224,28 @@ def sp_xml() -> Response:
     )
 
 
+@log_error
 def acs() -> BaseResponse:
     """Assertion consumer service."""  # noqa:D401
-    next_url = request.form.get("RelayState")
+    next_url = secure_redirect_url(request.form.get("RelayState", ""))
     saml_response = request.form.get("SAMLResponse")
     if saml_response is None:
         msg = "POST contained no SAMLResponse"
         raise AuthnResponseError(msg)
 
     authn_info = AuthnInfo.from_saml_response(saml_response)
+    logger.debug(authn_info)
+    # TODO: handling starts here, make configurable what happens from here
     if authn_info.user is None:
         # no user found in db, create one
+        # TODO: the user might wanna link this login-info to an existing account...
         # to prevent name collisions of users with same name, use random username instead
         # we never show username to other users anyway...
         # 16 bytes means chance of collisions is virtually 0 up to about 10**15 users
         authn_info.username = "user-" + token_hex(nbytes=16)
         authn_info.user = create_user(authn_info)
+
+    # TODO: register new affiliations/new login-methods/new ...
 
     if not login_user(authn_info.user):
         # user.active is False, hence wasn't logged in
@@ -191,7 +253,35 @@ def acs() -> BaseResponse:
         raise AuthnResponseError(msg)
     current_app.extensions["security"].datastore.commit()
 
+    # TODO: check for open redirect attacks;
+    #       check next_url against flask.config['TRUSTED_HOSTS']
+    #         (does flask do this already?)
     return redirect(next_url or current_app.config["SECURITY_POST_LOGIN_VIEW"])
+
+
+# TODO: for debug only, don't merge this
+def sp_json() -> dict:
+    """Return pysaml2 configuration as dict."""
+    config = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
+    for key in [
+        "key_file",
+        "cert_file",
+        "encryption_keypairs",
+        "logging",
+        "metadata",
+        "xmlsec_binary",
+    ]:
+        if key in config:
+            del config[key]
+    return config
+
+
+# TODO: collect all over the place TODOs in one place
+# pysaml2: `it is recommended that the entityid should point to a real webpage where the metadata for the entity can be found`
+# TODO: required_attributes should only be part of configuration when building <EntityDescriptor>, but not when building <AuthnRequest>
+# TODO: clicking back-and-forth between /login and /edugain/login messes up ?next=...
+# TODO: don't load metadata from db on /edugain/sp
+# TODO: the route /edugain/acs is duplicated in sp_config_dict, dedup this
 
 
 def create_blueprint(app: Flask) -> Blueprint:
@@ -230,6 +320,15 @@ def create_blueprint(app: Flask) -> Blueprint:
     blueprint.add_url_rule(routes["authn-request"], view_func=authn_request)
     blueprint.add_url_rule(routes["discofeed"], view_func=disco_feed)
     blueprint.add_url_rule(routes["login-discover"], view_func=discover_view)
+    # NOTE: the next one is special, it's also the identifier of the SP to the federation
     blueprint.add_url_rule(routes["sp-xml"], view_func=sp_xml)
+
+    # TODO: add configurable routes for these
+    blueprint.add_url_rule(
+        "/sp/json",
+        view_func=sp_json,
+    )  # TODO: to show pysaml2 config for registration purposes
+
+    # TODO: consider registering error-handlers, context-processors, ...
 
     return blueprint

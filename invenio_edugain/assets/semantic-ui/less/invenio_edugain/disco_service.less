@@ -3,10 +3,12 @@
 // invenio-edugain is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more details.
 
+// TODO: use multiple import?, use another specifier than multiple?: import (multiple) ...
 @element: "site";
 @type: "global";
 
 @import "../../theme.config";
+// @import (multiple) "themes/rdm/theme.less";  // invenio-flavored semantic-ui less
 @import "~semantic-ui-less/semantic.less";  // base semantic-ui as less
 
 /* Originally copied from shibboleth-eds's idpselect.css
@@ -86,6 +88,11 @@ div.IdPSelectPreferredIdPButton div.IdPSelectTextDiv {
         margin-bottom: calc(2rem - .14285em);
     }
 }
+/* TODO: disable depending on XSS-policy
+.IdPSelectIdPImg {
+    // disable images for now as XSS-policy prevents them from showing anyway
+    display: none;
+}*/
 
 
 /*
@@ -127,6 +134,8 @@ HTML element tree:
 #idpSelectIdPEntryTile {
     // for relative sizing of below elements
     font-size: 14px;
+      // TODO: this incorrectly also affects the `Allow me to pick from list` instead option
+      // TODO: how is this actually set in semantic-ui?
     text-align: left;
 }
 #idpSelectInput {
@@ -142,16 +151,24 @@ HTML element tree:
     font-family: "Source Sans Pro";
     font-size: 1em;
     left: 0px;
+    // TODO: currently hard-coded to px due to issues but should be em
+    //line-height: 1.21428571em;
     line-height: 17px;
     margin-right: 1em;
+    //margin: 0.78571429em 1em 0.167em 0em;
     min-height: 2.71428571em;
     min-width: 0em;
     outline: 0;
     outline: none;
     padding: 0.67857143em 1em 0.67857143em 1em;
+    // position: absolute;
     position: relative;
     text-align: left;
     top: 0em;
+    // transform: rotateZ(0deg);
+    // transition: box-shadow 0.1s ease, width 0.1s ease;
+    // transition: color 0.1s ease, border-color 0.1s ease;
+    // vertical-align: top;
     white-space: normal;
     width: calc(80% - 1em);
     word-wrap: break-word;
@@ -161,6 +178,8 @@ HTML element tree:
     };
 }
 #idpSelectSelectButton {
+    // TODO: change look on hover
+    // margin: 0.78571429em 1em;
     margin: 0;
     width: 20%;
 
@@ -174,6 +193,8 @@ HTML element tree:
     cursor: pointer;
     display: inline-block;
     font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+      // TODO: sometimes has instead when copying style: font-family: "Source Sans Pro";
+      //       use semantic-ui's configured font-family?
     font-size: 1rem;
     font-style: normal;
     font-weight: 700;
@@ -244,9 +265,11 @@ HTML element tree:
     a.IdPSelectHelpButton  // help button
 */
 #idpSelectIdPListTile {
+  // TODO: hard-coded to px due to issues, should be em/rem
   font-size: 14px;
 }
 div.IdPSelectTextDiv {
+    // TODO: copied from above, dedup this!
     display: inline-block;
     text-align: left;
     width: 100%;
@@ -264,9 +287,23 @@ div.IdPSelectTextDiv {
     #idpSelectInput();
     border-radius: 0;
 }
+// TODO: #idpSelectSelector::picker pseudo-element to change look of dropdown
+// ::picker(select) is still experimental as of 2025-06
 #idpSelectSelector option {
     border-radius: 0;
 }
 #idpSelectListButton {
     #idpSelectSelectButton();
 }
+
+
+/*
+********************
+*** all the rest ***
+********************
+*/
+/* TODO: label    margin: calc(2rem - .14285em) 0 1rem; */
+
+// TODO: how does this look on mobile phone screens?
+// TODO: label and input have margin between them
+//       clicking label/input focuses input, but clicking margin does nothing

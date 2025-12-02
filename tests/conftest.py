@@ -32,3 +32,6 @@ def app_config(app_config: dict):
 def create_app():
     """Flask app fixture for invenio_edugain."""
     return invenio_create_app
+
+
+# TODO: tests for config-building

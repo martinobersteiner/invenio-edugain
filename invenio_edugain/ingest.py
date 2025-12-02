@@ -27,6 +27,7 @@ class IdPDataImportItem:
 
 def pick_squarest_logo(mds: MetadataStore, idp_id: str, default: str = "") -> str:
     """Return logo-url with width/height ratio closest to 1."""
+    # TODO: is this unused now?
     pick = default
     best_ratio = 0.0
     for logo_dict in mds.mdui_uiinfo_logo(idp_id):
@@ -51,25 +52,10 @@ def from_mdstore(mds: MetadataStore) -> IdPDataImportItem:
         idp_data.id: idp_data for idp_data in db.session.scalars(db.select(IdPData))
     }
     for idp_id in idp_ids:
-        # not all edugain-members provide mdui_uiinfo
-        # therefore the generator `mds.mdui_uiinfo_display_name(...)` might be empty
-        # chain with `mds.name(...)` as a fallback
-        name_generator = chain(
-            mds.mdui_uiinfo_display_name(idp_id),
-            [name] if (name := mds.name(idp_id)) else [],
-        )
-        displayname = next(name_generator, "")
-        logo_url = pick_squarest_logo(mds, idp_id)
         settings = mds[idp_id]
         if idp_id in existing_idp_data:
             idp_data = existing_idp_data[idp_id]
-            if (
-                idp_data.displayname != displayname
-                or idp_data.logo_url != logo_url
-                or idp_data.settings != settings
-            ):
-                idp_data.displayname = displayname
-                idp_data.logo_url = logo_url
+            if idp_data.settings != settings:
                 idp_data.settings = settings
                 result_item.updated_idp_ids.append(idp_id)
             else:
@@ -77,12 +63,10 @@ def from_mdstore(mds: MetadataStore) -> IdPDataImportItem:
         else:
             idp_data = IdPData(
                 id=idp_id,
-                displayname=displayname,
-                logo_url=logo_url,
                 settings=settings,
             )
             result_item.added_idp_ids.append(idp_id)
-        db.session.add(idp_data)
+        db.session.add(idp_data)  # TODO: add only when changes?
 
     db.session.commit()
 

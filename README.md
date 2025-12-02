@@ -197,3 +197,5 @@ One of the [discussed topics](https://uhh.de/fdm-irdm25) was edugain ([write-up]
 This helped in getting a clearer handle on what people require of `invenio-edugain` and on how to implement it.
 
 Many thanks to the people partaking in the discussion and to _Universität Hamburg_ for hosting the event.
+
+<!-- TODO: translations-info -->

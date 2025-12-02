@@ -15,7 +15,7 @@ from flask import Flask
 from .utils import JSON, url_for_server
 
 
-class ShibbolethEDSKwargs(TypedDict):
+class ShibbolethEDSKwargs(TypedDict, total=False):
     """TypedDict of values available for shibboleth-eds config.
 
     For further info on these see:
@@ -30,13 +30,16 @@ class ShibbolethEDSKwargs(TypedDict):
     autoFollowCookieProps: str | None
     best_ratio: float  # NOTE: must be set to math.log(ratio)
     dataSource: str
+    # TODO: dataSources 1.4
     defaultLanguage: str
+    # TODO: recommended to set the following to blank 80x60 box
     defaultLogo: str
     defaultLogoHeight: int
     defaultLogoWidth: int
     defaultReturn: str
     defaultReturnIDParam: str
     doNotCollapse: bool
+    # TODO: extraCompareRegex 1.4
     helpURL: str | None
     hiddenIdPs: list[str] | None
     # ie6Hack  # noone should need this anymore...
