@@ -43,6 +43,7 @@ class Email(ValidatedEmail):
         else:
             self._validated_email = validate_email(
                 email_address,
+                # TODO: consider checking deliverability
                 check_deliverability=False,
             )
 
@@ -67,6 +68,7 @@ class LangDict(dict[str, str]):
             msg = f"LangDict values must be str, but these {len(bad_values)} key(s) weren't: {bad_values!r}"
             exceptions.append(TypeError(msg))
 
+        # TODO: consider also checking for whether keys are lang-codes
         if exceptions:
             msg = f"error when initializing {type(self).__module__}.{type(self).__qualname__}"
             raise ExceptionGroup(msg, exceptions)

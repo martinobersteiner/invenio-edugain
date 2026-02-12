@@ -105,6 +105,7 @@ def build_pysaml2_config(
         ],
         "entity_category": entity_categories,
         "http_client_timeout": 10,
+        # TODO: logging
         "logging": None,
         "metadata": [  # configure metadata-loader that loads from SQL
             {

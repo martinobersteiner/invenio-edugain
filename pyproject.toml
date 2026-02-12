@@ -10,7 +10,7 @@ authors = [
   {name = "Graz University of Technology", email = "info@tugraz.at"},
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -88,8 +88,9 @@ exclude = [
 path = "invenio_edugain/__init__.py"
 
 
-[tool.isort]
-profile = "black"
+[tool.mypy]
+exclude = ["docs"]
+ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
@@ -115,6 +116,7 @@ ignore = [
   "UP009",
 ]
 fixable = [
+  "I001",  # unsorted imports
   "RUF022",  # unsorted __all__
 ]
 
@@ -122,3 +124,8 @@ fixable = [
 "tests/**.py" = [
   "ANN201",
 ]
+
+
+
+[tool.setuptools]
+packages = ["invenio_edugain"]

@@ -1,0 +1,61 @@
+{# -*- coding: utf-8 -*-
+
+    Copyright (C) 2015-2020 CERN.
+    Copyright (C)      2021 TU Wien.
+    Copyright (C) 2021-2026 Graz University of Technology.
+  
+    invenio-edugain is free software; you can redistribute it and/or modify it
+    under the terms of the MIT License; see LICENSE file for more details.
+#}
+
+{% extends config.OAUTHCLIENT_LOGIN_USER_TEMPLATE_PARENT %}
+
+{% from "invenio_oauthclient/_macros.html" import oauth_button %}
+
+{%- block form_outer %}
+  {# edugain button - always enabled if this package is installed #}
+  <div class="ui form">
+    <div class="field">
+      {% set return_url = url_for('invenio_edugain.authn_request', next=next_url, _external=True) %}
+      <a class="ui fluid basic large button" href="{{ url_for('invenio_edugain.login_discover', **{'return': return_url}) }}">
+        <img src="{{ url_for('static', filename='icons/eduGAIN-FavIcon-transparent.png') }}" height="14px" />
+        {{ _('Sign in with edugain') }}
+      </a>
+    </div>
+  </div>
+
+  {% if config.OAUTHCLIENT_REMOTE_APPS %}
+    <div class="ui form">
+      {% for name in config.OAUTHCLIENT_REMOTE_APPS.keys() %}
+        {{ oauth_button(name, next=request.args.get('next')) }}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if config.ACCOUNTS_LOCAL_LOGIN_ENABLED %}
+    <div class="ui horizontal divider">
+      {{ _("OR") }}
+    </div>
+  {% endif %}
+
+  {{ super () }}
+{% endblock %}
+
+{%- block recoverable %}
+  {%- if security.recoverable or security.confirmable %}
+  <div class="ui one column centered grid">
+    {%- if security.recoverable %}
+    <div class="row">
+      <a class="ui inverted header tiny"
+          href="{{ url_for_security('forgot_password') }}">{{ _('Forgot password?') }}</a>
+    </div>
+    {%- endif %}
+    {%- if security.confirmable %}
+    <div class="row">
+      <a class="ui inverted header tiny"
+        href="{{url_for('security.send_confirmation')}}" class="text-muted">{{_('Resend confirmation email')}}</a>
+    </div>
+    {%- endif %}
+  </div>
+  {%- endif %}
+{%- endblock %}

@@ -30,6 +30,7 @@ from saml2.mdstore import MetadataStore
 from saml2.metadata import entity_descriptor
 from werkzeug.wrappers import Response as BaseResponse
 
+from .debug import debug_return_error, log_error, logger
 from .models import IdPData
 from .utils import (
     NS_PREFIX,
@@ -39,6 +40,7 @@ from .utils import (
 )
 
 
+@debug_return_error
 def login_discover() -> str:
     """Discovery page for choosing an IdP."""
     shibboleth_eds_config = current_app.config["EDUGAIN_SHIBBOLETH_EDS_CONFIG"]
@@ -50,6 +52,7 @@ def login_discover() -> str:
     )
 
 
+# @debug_return_error
 def disco_feed() -> list:
     """Return disco feed for use with shibboleth EDS."""
     config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
@@ -84,6 +87,8 @@ def disco_feed() -> list:
         ]:
             for name_dict in org.get(name_key, []):
                 names_by_lang[name_dict["lang"]].append(name_dict["text"])
+        # TODO: mds.name(idp_id) as fallback (for 'en'?, for all langs (is this even possible))
+        #       - yes: shibboleth-eds falls back to 'en' disp-name of no other given, so this is all defaults
 
         entry["DisplayNames"] = [
             {"lang": lang, "value": names[0]} for lang, names in names_by_lang.items()
@@ -122,6 +127,7 @@ def disco_feed() -> list:
     return feed
 
 
+# TODO: consider using a FlaskResource for the following functions
 def authn_request() -> BaseResponse:
     """Send an authorization-request to IdP depending on `request.args`.
 
@@ -139,6 +145,7 @@ def authn_request() -> BaseResponse:
         or current_app.config.get("SECURITY_POST_LOGIN_VIEW")
         or "/"
     )
+    # TODO: if next is /saml/login or /login or something weird like that, use defaults instead
 
     # pysaml2: create authn-request
     config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
@@ -157,7 +164,10 @@ def authn_request() -> BaseResponse:
     else:
         abort(400, description="No ACS configured for this host")
 
+    # TODO: cache request-id to guard against replay attacks
     _request_id, http_args = client.prepare_for_authenticate(
+        # TODO: sort by alphabet
+        # TODO: binding=HTTP_POST?
         entityid=entityid,
         relay_state=relay_state,
         nsprefix=NS_PREFIX,
@@ -205,6 +215,7 @@ def sp_xml() -> Response:
     )
 
 
+@log_error
 def acs() -> BaseResponse:
     """Assertion consumer service."""  # noqa:D401
     next_url = secure_redirect_url(request.form.get("RelayState", ""))
@@ -214,9 +225,60 @@ def acs() -> BaseResponse:
         raise AuthnResponseError(msg)
 
     authn_info = AuthnInfo.from_saml_response(saml_response)
+    logger.debug(authn_info)
 
     response_handler = load_or_import_from_config("EDUGAIN_AUTHN_RESPONSE_HANDLER")
     return response_handler(authn_info, next_url)
+
+
+def slo() -> BaseResponse:
+    # TODO: @route('/slo')
+    from invenio_accounts.sessions import delete_user_sessions
+    from saml2 import BINDING_HTTP_REDIRECT, request
+
+    # NOTE: both LogoutRequest as well as LogoutRequestResponse is sent to this endpoint
+    if is_log_req_resp(...):
+        ...
+
+    saml_xml_logout_request: str = request.form.get("LogoutRequest")
+
+    config_dict = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
+    config = SPConfig()
+    config.load(config_dict)
+    client = Saml2Client(config)
+
+    logout_request = client.parse_logout_request(
+        saml_xml_logout_request,
+        binding=BINDING_HTTP_REDIRECT,
+    )
+    user_id = ...(logout_request)
+
+    delete_user_sessions(user_id)
+
+    client.create_logout_response()
+
+    return ""
+
+
+# TODO: for debug only, don't merge this
+def sp_json() -> dict:
+    """Return pysaml2 configuration as dict."""
+    config = current_app.config["EDUGAIN_PYSAML2_CONFIG"]
+    for key in [
+        "key_file",
+        "cert_file",
+        "encryption_keypairs",
+        "logging",
+        "metadata",
+        "xmlsec_binary",
+    ]:
+        if key in config:
+            del config[key]
+    return config
+
+
+# TODO: clicking back-and-forth between /login and /edugain/login messes up ?next=...
+# TODO: don't load metadata from db on /edugain/sp
 
 
 def create_blueprint(app: Flask) -> Blueprint:
@@ -256,5 +318,13 @@ def create_blueprint(app: Flask) -> Blueprint:
     blueprint.add_url_rule(routes["discofeed"], view_func=disco_feed)
     blueprint.add_url_rule(routes["login-discover"], view_func=discover_view)
     blueprint.add_url_rule(routes["sp-xml"], view_func=sp_xml)
+
+    # TODO: add configurable routes for these
+    blueprint.add_url_rule(
+        "/sp/json",
+        view_func=sp_json,
+    )  # TODO: to show pysaml2 config for registration purposes
+
+    # TODO: consider registering error-handlers, context-processors, ...
 
     return blueprint

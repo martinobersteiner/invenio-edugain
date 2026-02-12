@@ -171,6 +171,9 @@ class MetaDataFlaskSQL(InMemoryMetaData):
         """Init."""
         super().__init__(attrc, **kwargs)
 
+    # TODO: load only passed idp-id?
+    # TODO: cache, same cache as above
+    # TODO: pass some positional arg that actually does something? e.g. `db`
     def load(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401, ARG002
         """Load."""
         for idp in db.session.scalars(
@@ -223,6 +226,7 @@ class AuthnInfo:
         authn_response: AuthnResponse | None = client.parse_authn_request_response(
             saml_xml_response,
             BINDING_HTTP_POST,
+            outstanding=[],  # TODO: pass list of ids for which a response is pending
         )
         if authn_response is None:
             msg = "error when parsing SAML <Response>"
@@ -283,6 +287,7 @@ class AuthnInfo:
         username = username.replace(" ", "-")
         username = username.replace(".", "_")
         username = username.replace("+", "_")
+        # TODO: asciify names instead of striping non-ASCII chars (e.g. using `anyascii` package)
         allowed_chars = string.ascii_letters + string.digits + "-_"
         username = "".join(char for char in username if char in allowed_chars)
         if username[0] not in string.ascii_letters:
@@ -314,6 +319,8 @@ class AuthnInfo:
         )
 
 
+# TODO: further args, preferences in particular
+# TODO: consider renaming to make clear that this also links UserIdentity
 def create_user(authn_info: AuthnInfo) -> User:
     """Create user and link it with first method in authn_info.id_by_method.
 
@@ -348,6 +355,7 @@ def create_user(authn_info: AuthnInfo) -> User:
     )
     if form.validate():
         # see invenio_saml.invenio_accounts.utils:account_register
+        # TODO: make this configurable
         confirmed_at = datetime.now(UTC)
         data = {
             **form.to_dict(),
@@ -357,13 +365,19 @@ def create_user(authn_info: AuthnInfo) -> User:
             data["password"] = ""
         user = register_user(**data)
         if not data["password"]:
+            # TODO: this is from invenio-saml, does user.password=None prevent local login?
             user.password = None
         current_app.extensions["security"].datastore.commit()
     else:
+        from .debug import logger  # noqa: PLC0415
+
+        logger.debug(form.errors)
         msg = "form failed to validate when trying to create a user"
+        # TODO: log form.errors somehow
         raise AuthnResponseError(msg)
 
     UserIdentity.create(user, method=method, external_id=external_id)
+    # TODO: consider linking with all of the others too
     db.session.commit()
 
     return user
@@ -400,11 +414,15 @@ def default_authn_response_handler(
     """Handle authn-response by creating uncreated accounts and then logging them in."""
     if authn_info.user is None:
         # no user found in db, create one
+        # TODO: this is tugraz only
+        # TODO: the user might wanna link this login-info to an existing account...
         # to prevent name collisions of users with same name, use random username instead
         # we never show username to other users anyway...
         # 16 bytes means chance of collisions is virtually 0 up to about 10**15 users
         authn_info.suggested_username = "user-" + token_hex(nbytes=16)
         authn_info.user = create_user(authn_info)
+
+    # TODO: register new affiliations/new login-methods/new ...
 
     if not login_user(authn_info.user):
         # user.active is False, hence wasn't logged in

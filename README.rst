@@ -22,6 +22,9 @@
 To fill in the form for registering your invenio instance for use with edugain, it's necessary to have basic knowledge about terminology and inner workings.
 This section quickly summarizes that.
 
+.. image:: /docs/images/saml_http-post_flowchart.png
+   :alt: flowchart of SAML's HTTP-POST protocol
+
 `Secure Assertion Markup Language (SAML)`: a standard for authenticating users, build on XML
 
 By SAML's HTTP-POST protocol, authentication involves two servers and a user, and works as follows:
